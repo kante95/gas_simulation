@@ -22,7 +22,7 @@ void initialize(double L,double positions[N][3]){
 }
 
 
-double find_delta(double temperature,double L, double delta){
+double tmpfind_delta(double temperature,double L, double delta){
     int steps = 0;
     int acceptance = 0;
     float acceptance_ratio=0;
@@ -64,22 +64,22 @@ double find_delta(double temperature,double L, double delta){
         return delta;
     }
     else if(acceptance_ratio == 0.0){
-        return find_delta(temperature,L, delta/1.5);
+        return tmpfind_delta(temperature,L, delta/1.5);
     }
     else{
-        return find_delta(temperature,L, delta*(acceptance_ratio/50)); //???? più graduale delta 
+        return tmpfind_delta(temperature,L, delta*(acceptance_ratio/50)); //???? più graduale delta 
     }
 }
 
 
-void simulation(int n, double density,double temp){
+void tmpsimulation(int n, double density,double temp){
  
     double V = N/density;
     double L = pow(V,1.0/3.0);
 
     //printf("Attendi, trovo il migliore delta.... Processore %d\n",rank);
    
-    double delta = find_delta(temp,L,0.01/(pow(density,1.0/3.0)));//find_delta(temp_simul,L,0.02/(pow(density,1.0/3.0)));//0.05/(pow(density,1.0/3.0));//find_delta(temp_simul,L,0.01);
+    double delta = tmpfind_delta(temp,L,0.01/(pow(density,1.0/3.0)));//find_delta(temp_simul,L,0.02/(pow(density,1.0/3.0)));//0.05/(pow(density,1.0/3.0));//find_delta(temp_simul,L,0.01);
   
     //printf("Processore %d Delta migliore trovato: %lf, adesso inizio la simulazione\n",rank,delta);
 
@@ -98,7 +98,7 @@ void simulation(int n, double density,double temp){
     double p;
     double xi;
     
-    int dadecidere = 1000;
+    int dadecidere = 10000;
     char filename[80];
     int i,j;
     int remaining = n;
@@ -106,6 +106,7 @@ void simulation(int n, double density,double temp){
     //loop principale della catena
     while(remaining>0)
     {
+
         for(j=0 ; j<N;j++){
         	for(i=0 ; i<3;i++){
         		new_positions[j][i] = positions[j][i]+myrandom(-delta/2,delta/2);
@@ -137,7 +138,7 @@ void simulation(int n, double density,double temp){
 void generate_initial_configurations(int n, double density, double temperature){
     time_t t;
 
-    srand((unsigned) time(&t));
+    srand(23);
 
-    simulation(n,density, temperature);
+    tmpsimulation(n,density, temperature);
 }

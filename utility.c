@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <stdlib.h>
+#include <string.h>
 #include "utility.h"
 
 double min(double a,double b){
@@ -81,6 +82,28 @@ void printmatrix_onfile(double matrix[N][3],char *filename){
     FILE *f = fopen(filename, "w+");
     for(i=0;i<N;i++){
       fprintf(f, "%lf,%lf,%lf\n",matrix[i][0],matrix[i][1],matrix[i][2]);
+    }
+    fclose(f);
+}
+
+void readmatrix(double matrix[N][3],char *filename){
+    int i=0,j=0;
+    FILE *f = fopen(filename, "r");
+    char *line = NULL;
+    char *record;
+    size_t len = 0;
+    ssize_t read;
+
+    while ((read = getline(&line, &len, f)) != -1) {
+      j=0;
+      record = strtok(line,",");
+      while(record != NULL)
+      {
+        matrix[i][j] = atof(record);
+        record = strtok(NULL,",");
+        j++;
+      }
+      i++;
     }
     fclose(f);
 }
