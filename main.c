@@ -9,12 +9,14 @@
 #define num_temp 50
 
 
-void simulation(double density, double temperature, int steps, double potentials[num_temp][3],int rank);
+double *simulation(double density, double temperature, int steps, double potentials[num_temp][3],int rank);
 
 int main(){
 
 	double density = 0.01;
 	double temperature = 2.0;
+
+	double *temps;
 
 	int total_steps = 100000;
 
@@ -44,7 +46,12 @@ int main(){
 		}
 	}
 
-	simulation(density,temperature,steps,potentials,rank);
+	temps = simulation(density,temperature,steps,potentials,rank);
+
+	//double dpotentials[num_temp][2];
+	//for(i=0;i<num_temp;i++){
+	//	dpotentials[i][0] = sqrt((1/steps)*())
+	//}
 
 	MPI_Reduce(potentials,final_potentials,num_temp*3,MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
 	if(rank==0){
@@ -57,59 +64,10 @@ int main(){
 }
 
 
-double find_delta(double temperature,double L, double delta,double initial_position[N][3]){
-    int steps = 0;
-    int acceptance = 0;
-    float acceptance_ratio=0;
-    double beta = 1.0/temperature;
-    int i,j;
-    double positions[N][3];
-    double potential;
-    double new_potential;
-    double p;
-    double xi;
-    double new_positions[N][3];
 
-    copy_matrix(initial_position,positions);
-    potential = calculate_potential(positions,L);
-    while(steps<1000){
-    	//printmatrix(positions);
-        for(j=0; j<N;j++){
-        	for(i=0; i<3;i++){
-        		new_positions[j][i] = positions[j][i]+myrandom(-delta/2,delta/2);
-                new_positions[j][i] -= L*rint(new_positions[j][i]/L);
-        	}
-        }  
-        //printmatrix(new_positions);
-        new_potential = calculate_potential(new_positions,L);
-        p = min(1,exp(-beta*(new_potential - potential)));
-        xi = ((double)rand()/(double)(RAND_MAX));
-        if (xi < p){
-        	copy_matrix(new_positions,positions);
-            potential = new_potential;
-            acceptance+=1;
-        }
-        steps+=1;
+double *simulation(double density, double temp_simul, int steps, double potentials[num_temp][3],int rank){ 
 
-        
-    }
-    acceptance_ratio = acceptance*100/(steps-1);
-    //printf("Delta: %lf, Acceptance ratio: %lf\n",delta,acceptance_ratio);
-    if(acceptance_ratio<60 && acceptance_ratio>45){
-        return delta;
-    }
-    else if(acceptance_ratio == 0.0){
-        return find_delta(temperature,L, delta/1.5,initial_position);
-    }
-    else{
-        return find_delta(temperature,L, delta*(acceptance_ratio/50),initial_position); //???? più graduale delta + (acceptance_ratio-50)%(L/2)
-        //delta*(acceptance_ratio/50)
-    }
-}
-
-void simulation(double density, double temp_simul, int steps, double potentials[num_temp][3],int rank){ 
-
- 	double temp[num_temp];
+ 	static double temp[num_temp];
 	int i,t,k,j;
 	double first_temp = 1.0;
 	double last_temp = 4.0;
@@ -205,4 +163,6 @@ void simulation(double density, double temp_simul, int steps, double potentials[
     }
 
     printf("Processore: %d, Acceptance ratio: %lf\n",rank,acceptance*100/(double)steps);
+
+    return temp;
 }

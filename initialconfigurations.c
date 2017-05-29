@@ -23,73 +23,26 @@ void initialize(double L,double positions[N][3]){
 }
 
 
-double tmpfind_delta(double temperature,double L, double delta){
-    int steps = 0;
-    int acceptance = 0;
-    float acceptance_ratio=0;
-    double beta = 1.0/temperature;
-    int i,j;
-    double positions[N][3];
-    double potential;
-    double new_potential;
-    double p;
-    double xi;
-    double new_positions[N][3];
-
-    initialize(L,positions);
-    potential = calculate_potential(positions,L);
-    while(steps<1000){
-    	//printmatrix(positions);
-        for(j=0; j<N;j++){
-        	for(i=0; i<3;i++){
-        		new_positions[j][i] = positions[j][i]+myrandom(-delta/2,delta/2);
-                new_positions[j][i] -= L*rint(new_positions[j][i]/L);
-        	}
-        }  
-        //printmatrix(new_positions);
-        new_potential = calculate_potential(new_positions,L);
-        p = min(1,exp(-beta*(new_potential - potential)));
-        xi = ((double)rand()/(double)(RAND_MAX));
-        if (xi < p){
-        	copy_matrix(new_positions,positions);
-            potential = new_potential;
-            acceptance+=1;
-        }
-        steps+=1;
-
-        
-    }
-    acceptance_ratio = acceptance*100/(steps-1);
-    //printf("Delta: %lf, Acceptance ratio: %lf\n",delta,acceptance_ratio);
-    if(acceptance_ratio<60 && acceptance_ratio>40){
-        return delta;
-    }
-    else if(acceptance_ratio == 0.0){
-        return tmpfind_delta(temperature,L, delta/1.5);
-    }
-    else{
-        return tmpfind_delta(temperature,L, delta*(acceptance_ratio/50)); //???? più graduale delta 
-    }
-}
-
 
 void tmpsimulation(int n, double density,double temp){
  
     double V = N/density;
     double L = pow(V,1.0/3.0);
 
+    //inizializzazione
+    double positions[N][3];
+    initialize(L,positions); 
+
     //printf("Attendi, trovo il migliore delta.... Processore %d\n",rank);
    
-    double delta = tmpfind_delta(temp,L,0.01/(pow(density,1.0/3.0)));//find_delta(temp_simul,L,0.02/(pow(density,1.0/3.0)));//0.05/(pow(density,1.0/3.0));//find_delta(temp_simul,L,0.01);
+    double delta = find_delta(temp,L,0.01/(pow(density,1.0/3.0)),positions);//find_delta(temp_simul,L,0.02/(pow(density,1.0/3.0)));//0.05/(pow(density,1.0/3.0));//find_delta(temp_simul,L,0.01);
   
     //printf("Processore %d Delta migliore trovato: %lf, adesso inizio la simulazione\n",rank,delta);
 
     int acceptance = 0;
 
     double beta = 1.0/temp;
-    //inizializzazione
-    double positions[N][3];
-    initialize(L,positions); 
+
     //printmatrix(positions);
     double potential = calculate_potential(positions,L);
     //printf("Potenziale %lf\n",potential);

@@ -19,3 +19,5 @@ void printmatrix_onfile(double matrix[N][3],char *filename);
 void generate_initial_configurations(int n, double density, double temperature);
 
 void readmatrix(double matrix[N][3],char *filename);
+
+double find_delta(double temperature,double L, double delta,double initial_position[N][3]);
