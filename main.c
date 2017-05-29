@@ -40,6 +40,7 @@ int main(){
     }
     MPI_Barrier(MPI_COMM_WORLD);
 
+    srand(rank);
 	steps = total_steps/world_size;
 	if(total_steps%world_size!=0){
 		int rest = total_steps%world_size;
@@ -57,7 +58,6 @@ int main(){
 		dpotentials[i][1] = sqrt((1/steps)*(potentials[i][2]-potentials[i][1]*potentials[i][1]));
 	}
 
-	MPI_Barrier(MPI_COMM_WORLD);
 	MPI_Allreduce(potentials,final_potentials,num_temp*3,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
 	if(rank==0){
 		char filename[80];
