@@ -86,6 +86,7 @@ void printmatrix_onfile(double matrix[N][3],char *filename){
     fclose(f);
 }
 
+
 void readmatrix(double matrix[N][3],char *filename){
     int i=0,j=0;
     FILE *f = fopen(filename, "r");

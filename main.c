@@ -6,7 +6,7 @@
 #include <mpi.h>
 #include "utility.h"
 
-#define num_temp 50
+#define num_temp 100
 
 
 double *simulation(double density, double temperature, int steps, double potentials[num_temp][3],int rank);
@@ -20,10 +20,12 @@ int main(){
 
 	int total_steps = 100000;
 
-	int steps;
+	int steps,i;
 
 	double potentials[num_temp][3];
 	double final_potentials[num_temp][3];
+
+	double cv[num_temp];
 
     MPI_Init(NULL, NULL);
 
@@ -48,14 +50,30 @@ int main(){
 
 	temps = simulation(density,temperature,steps,potentials,rank);
 
-	//double dpotentials[num_temp][2];
-	//for(i=0;i<num_temp;i++){
-	//	dpotentials[i][0] = sqrt((1/steps)*())
-	//}
+	
+	double dpotentials[num_temp][2];
+	for(i=0;i<num_temp;i++){
+		dpotentials[i][0] = sqrt((1/steps)*(potentials[i][1]-potentials[i][0]*potentials[i][0]));
+		dpotentials[i][1] = sqrt((1/steps)*(potentials[i][2]-potentials[i][1]*potentials[i][1]));
+	}
 
-	MPI_Reduce(potentials,final_potentials,num_temp*3,MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
+	MPI_Barrier(MPI_COMM_WORLD);
+	MPI_Allreduce(potentials,final_potentials,num_temp*3,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
 	if(rank==0){
-		printf("Potenziale medio: %lf, Potenziale medio quadro: %lf, Potenziale medio alla quarta: %lf\n",final_potentials[0][0]/world_size,final_potentials[0][1]/world_size,final_potentials[0][2]/world_size);
+		char filename[80];
+		sprintf(filename,"%lf.csv",density);
+    	FILE *f = fopen(filename, "w+");
+		for(i=0;i<num_temp;i++){
+			final_potentials[i][0] /= world_size; 
+			final_potentials[i][1] /= world_size; 
+			final_potentials[i][2] /= world_size; 
+			cv[i] = (final_potentials[i][1]-final_potentials[i][0]*final_potentials[i][0])/(temps[i]*temps[i]);
+			//printf("Cv: %lf",cv[i]);
+      		fprintf(f, "%lf,%lf\n",cv[i],temps[i]);
+    		
+    		
+		}
+		fclose(f);
 	}
 
     MPI_Finalize();
