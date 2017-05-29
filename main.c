@@ -2,7 +2,7 @@
 #include <math.h>
 #include <time.h>
 #include <stdlib.h>
-#include <unistd.h>
+
 #include <mpi.h>
 #include "utility.h"
 
@@ -95,7 +95,7 @@ double find_delta(double temperature,double L, double delta,double initial_posit
     }
     acceptance_ratio = acceptance*100/(steps-1);
     //printf("Delta: %lf, Acceptance ratio: %lf\n",delta,acceptance_ratio);
-    if(acceptance_ratio<60 && acceptance_ratio>40){
+    if(acceptance_ratio<60 && acceptance_ratio>45){
         return delta;
     }
     else if(acceptance_ratio == 0.0){

@@ -2,6 +2,7 @@
 #include <math.h>
 #include <time.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include "utility.h"
 
 
@@ -98,7 +99,7 @@ void tmpsimulation(int n, double density,double temp){
     double p;
     double xi;
     
-    int dadecidere = 10000;
+    int dadecidere = 1000;
     char filename[80];
     int i,j;
     int remaining = n;
@@ -136,9 +137,24 @@ void tmpsimulation(int n, double density,double temp){
 }
 
 void generate_initial_configurations(int n, double density, double temperature){
-    time_t t;
-
-    srand(23);
-
-    tmpsimulation(n,density, temperature);
+    char filename[80];
+    int i;
+    int ok=1;
+    printf("Controllo se ci sono i file delle configurazioni iniziali...\n");
+    for(i=0;i<n;i++){
+        sprintf(filename,"%d.csv",i);
+        if(access(filename,F_OK) == -1){
+            ok = 0;
+            break;
+        }
+    }
+    if(ok==0){
+        printf("Configurazioni iniziali non trovate o incomplete, inizio a generarle...\n");
+        srand(23);
+        tmpsimulation(n,density, temperature);
+        printf("Inizio simulazione\n");
+    }
+    else{
+        printf("Ci sono tutti, inizio la simulazione...\n");
+    }
 }
