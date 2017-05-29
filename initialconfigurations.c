@@ -7,7 +7,7 @@
 
 
 void initialize(double L,double positions[N][3]){
-    float i = 5;
+    float i = 8;
     int index = 0;
     float j,k,m;
     for(j =0;j<i;j++){

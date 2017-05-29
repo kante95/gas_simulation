@@ -1,4 +1,4 @@
-#define N 125
+#define N 512
 
 double min(double a,double b);
 
