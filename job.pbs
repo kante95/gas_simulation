@@ -1,7 +1,7 @@
-##PBS -l nodes=20:ppn=2,walltime=1:00:00
-##PBS -q nparallel
+#PBS -l nodes=5:ppn=2,walltime=5:00:00
+#PBS -q nparallel
 
 lamboot $PBSNODES 
 cd $PBS_O_WORKDIR
-mpirun -np 40 simulation
+mpirun -np 10 simulation
 lamclean

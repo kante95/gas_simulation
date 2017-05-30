@@ -3,11 +3,15 @@
 #include <time.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+
+
 #include "utility.h"
 
 
 void initialize(double L,double positions[N][3]){
-    float i = 8;
+    float i = 5;
     int index = 0;
     float j,k,m;
     for(j =0;j<i;j++){
@@ -25,6 +29,10 @@ void initialize(double L,double positions[N][3]){
 
 
 void tmpsimulation(int n, double density,double temp){
+
+    char fi[80];
+    sprintf(fi,"%lf",density);
+    mkdir(fi, 0700);
  
     double V = N/density;
     double L = pow(V,1.0/3.0);
@@ -52,7 +60,7 @@ void tmpsimulation(int n, double density,double temp){
     double p;
     double xi;
     
-    int dadecidere = 1000;
+    int dadecidere = 5000;
     char filename[80];
     int i,j;
     int remaining = n;
@@ -80,7 +88,7 @@ void tmpsimulation(int n, double density,double temp){
         }
         
         if(k%dadecidere){
-            sprintf(filename,"%d.csv",remaining-1);
+            sprintf(filename,"./%lf/%d.csv",density,remaining-1);
             printmatrix_onfile(positions,filename);
             remaining--;
         }
@@ -95,7 +103,7 @@ void generate_initial_configurations(int n, double density, double temperature){
     int ok=1;
     printf("Controllo se ci sono i file delle configurazioni iniziali...\n");
     for(i=0;i<n;i++){
-        sprintf(filename,"%d.csv",i);
+        sprintf(filename,"./%lf/%d.csv",density,i);
         if(access(filename,F_OK) == -1){
             ok = 0;
             break;

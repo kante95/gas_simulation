@@ -2,18 +2,21 @@
 #include <math.h>
 #include <time.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 #include <mpi.h>
 #include "utility.h"
 
-#define num_temp 100
+#define num_temp 50
 
 
 double *simulation(double density, double temperature, int steps, double potentials[num_temp][3],int rank);
 
+double deltatable(double x);
+
 int main(){
 
-	double density = 0.01;
+	double density = 0.02;
 	double temperature = 2.0;
 
 	double *temps;
@@ -104,12 +107,12 @@ double *simulation(double density, double temp_simul, int steps, double potentia
     double L =pow(V,1.0/3.0);
 
     char filename[80];
-    sprintf(filename,"%d.csv",rank);
+    sprintf(filename,"./%lf/%d.csv",density,rank);
     double positions[N][3];
     readmatrix(positions,filename);
     printf("Attendi, trovo il migliore delta.... Processore %d\n",rank);
    
-    double delta = find_delta(temp_simul,L,0.01/(pow(density,1.0/3.0)),positions);//find_delta(temp_simul,L,0.02/(pow(density,1.0/3.0)));//0.05/(pow(density,1.0/3.0));//find_delta(temp_simul,L,0.01);
+    double delta = deltatable(density);//find_delta2(density);//find_delta(temp_simul,L,0.01/(pow(density,1.0/3.0)),positions);//find_delta(temp_simul,L,0.02/(pow(density,1.0/3.0)));//0.05/(pow(density,1.0/3.0));//find_delta(temp_simul,L,0.01);
   
     printf("Processore %d Delta migliore trovato: %lf, adesso inizio la simulazione\n",rank,delta);
 
@@ -144,7 +147,7 @@ double *simulation(double density, double temp_simul, int steps, double potentia
     {
         for(j=0 ; j<N;j++){
         	for(i=0 ; i<3;i++){
-        		new_positions[j][i] = positions[j][i]+myrandom(-delta/2,delta/2);;
+        		new_positions[j][i] = positions[j][i]+myrandom(-delta/2,delta/2);
                 new_positions[j][i] -= L*rint(new_positions[j][i]/L);
         	}
         }
@@ -158,11 +161,9 @@ double *simulation(double density, double temp_simul, int steps, double potentia
         	copy_matrix(new_positions,positions);
             potential = new_potential;
             acceptance+=1;
-            //printf("accettata!!\n");
         }
         Vt_simul += potential;
         Vt2_simul+= potential*potential;
-
     	for(t=0;t<num_temp;t++)
     	{
     		potentials[t][0] +=  potential*exp((beta - betas[t])*potential);
@@ -170,6 +171,8 @@ double *simulation(double density, double temp_simul, int steps, double potentia
         	potentials[t][2] +=  pow(potential,4.0)*exp((beta - betas[t])*potential);
         	normalization[t] += exp((beta - betas[t])*potential);
     	}
+    	
+    	//sleep(1);
     }
 
     
@@ -179,8 +182,7 @@ double *simulation(double density, double temp_simul, int steps, double potentia
         potentials[t][1] /=  normalization[t];  
         potentials[t][2] /=  normalization[t];     
     }
-
-    printf("Processore: %d, Acceptance ratio: %lf\n",rank,acceptance*100/(double)steps);
+    printf("Processore: %d, Acceptance ratio: %lf step fatti: %d\n",rank,acceptance*100/(double)steps,k);
 
     return temp;
 }

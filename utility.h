@@ -1,4 +1,4 @@
-#define N 512
+#define N 125
 
 double min(double a,double b);
 
@@ -21,3 +21,5 @@ void generate_initial_configurations(int n, double density, double temperature);
 void readmatrix(double matrix[N][3],char *filename);
 
 double find_delta(double temperature,double L, double delta,double initial_position[N][3]);
+
+double find_delta2(double density);

@@ -62,7 +62,7 @@ double calculate_potential(double positions[N][3],double L){
           r+=d*d;
         }
         r = sqrt(r);
-        if(r<L/2.0 && r!=0.0){
+        if(r<L/2.0){
           potential+=2*lennard_jones(r);
         }
       }
@@ -109,7 +109,9 @@ void readmatrix(double matrix[N][3],char *filename){
     fclose(f);
 }
 
-
+double find_delta2(double density){
+  return 0.03037587 + (0.4316096 - 0.03037587)/(1 + pow(density/0.008681893,2.252729));
+}
 
 double find_delta(double temperature,double L, double delta,double initial_position[N][3]){
     int steps = 0;
@@ -126,7 +128,7 @@ double find_delta(double temperature,double L, double delta,double initial_posit
 
     copy_matrix(initial_position,positions);
     potential = calculate_potential(positions,L);
-    while(steps<1000){
+    while(steps<50000){
       //printmatrix(positions);
         for(j=0; j<N;j++){
           for(i=0; i<3;i++){
