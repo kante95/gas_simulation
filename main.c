@@ -8,15 +8,48 @@
 #include "utility.h"
 
 #define num_temp 100
+#define num_density 20
 
 
 double *simulation(double density, double temperature, int steps, double potentials[num_temp][3],int rank);
 
 double deltatable(double x);
 
+
 int main(){
 
-	double density = 0.02;
+	int i;
+
+	double density[num_density];
+
+	double first_density = 0.01;
+	double last_density = 1.0;
+	double step = (last_density-first_density)/(num_density-1);
+	for (i = 0; i < num_density; i++) {
+		temp[i] = step*i + first_density;
+	}
+
+    MPI_Init(NULL, NULL);
+
+    int world_size;
+    MPI_Comm_size(MPI_COMM_WORLD, &world_size);
+
+    int rank;
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+    for(i=0;i<num_density;i++){
+    	start_simulation(rank,world_size,density[i])
+    }
+
+	MPI_Finalize();
+
+}
+
+
+
+void start_simulation(int rank, int world_size, double density){
+
+	//double density = 0.02;
 	double temperature = 2.0;
 
 	double *temps;
@@ -30,15 +63,9 @@ int main(){
 
 	double cv[num_temp];
 
-    MPI_Init(NULL, NULL);
-
-    int world_size;
-    MPI_Comm_size(MPI_COMM_WORLD, &world_size);
 
     double *final_potentials= (double*)malloc(sizeof(double)*num_temp*3*world_size);
 
-    int rank;
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
     //if(rank==0){
     //	generate_initial_configurations(world_size,density,temperature);
@@ -99,9 +126,6 @@ int main(){
 		fclose(f);
 	}
 
-    MPI_Finalize();
-
-    return 0;
 }
 
 
