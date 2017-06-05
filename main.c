@@ -7,7 +7,7 @@
 #include <mpi.h>
 #include "utility.h"
 
-#define num_temp 50
+#define num_temp 100
 
 
 double *simulation(double density, double temperature, int steps, double potentials[num_temp][3],int rank);
@@ -21,7 +21,8 @@ int main(){
 
 	double *temps;
 
-	int total_steps = 500000;
+
+	int total_steps = 5000000;
 
 	int steps,i,j;
 

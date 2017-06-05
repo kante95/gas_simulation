@@ -25,3 +25,4 @@ double find_delta(double temperature,double L, double delta,double initial_posit
 double find_delta2(double density);
 
 void initialize(double L,double positions[N][3]);
+
