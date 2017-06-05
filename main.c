@@ -15,6 +15,7 @@ double *simulation(double density, double temperature, int steps, double potenti
 
 double deltatable(double x);
 
+void start_simulation(int rank, int world_size, double density);
 
 int main(){
 
@@ -32,7 +33,7 @@ int main(){
 	double last_density = 1.0;
 	double step = (last_density-first_density)/(num_density-1);
 	for (i = 0; i < num_density; i++) {
-		temp[i] = step*i + first_density;
+		density[i] = step*i + first_density;
 	}
 
     MPI_Init(NULL, NULL);
@@ -44,10 +45,10 @@ int main(){
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
     for(i=0;i<num_density;i++){
-    	start_simulation(rank,world_size,density[i])
+    	start_simulation(rank,world_size,density[i]);
 
   		timeinfo = localtime (&rawtime);
-    	printf("Finita simulazione densità: %lf a %s\n",density[i],asctime(timeinfo))
+    	printf("Finita simulazione densità: %lf a %s\n",density[i],asctime(timeinfo));
     }
 
 	MPI_Finalize();
