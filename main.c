@@ -18,6 +18,12 @@ double deltatable(double x);
 
 int main(){
 
+	time_t rawtime;
+  	struct tm * timeinfo;
+  	time (&rawtime);
+
+	freopen ("output.txt","w",stdout);
+
 	int i;
 
 	double density[num_density];
@@ -39,10 +45,14 @@ int main(){
 
     for(i=0;i<num_density;i++){
     	start_simulation(rank,world_size,density[i])
+
+  		timeinfo = localtime (&rawtime);
+    	printf("Finita simulazione densità: %lf a %s\n",density[i],asctime(timeinfo))
     }
 
 	MPI_Finalize();
 
+	fclose (stdout);
 	return 0;
 }
 
@@ -63,6 +73,7 @@ void start_simulation(int rank, int world_size, double density){
 	double potentials[num_temp][3] = {0};
 
 	double cv[num_temp];
+	double dcv[num_temp];
 
 
     double *final_potentials= (double*)malloc(sizeof(double)*num_temp*3*world_size);
@@ -119,8 +130,9 @@ void start_simulation(int rank, int world_size, double density){
     	FILE *f = fopen(filename, "w+");
 		for(i=0;i<num_temp;i++){
 			cv[i] = (avrpotential2[i]-avrpotential[i]*avrpotential[i])/(temps[i]*temps[i]);
+			dcv[i] = (1/temps[i]*temps[i])*sqrt( pow(dpotential2[i],2.0) +pow(2*avrpotential[i]*dpotential[i],2.0));
 			//printf("Cv: %lf",cv[i]);
-      		fprintf(f, "%lf,%lf\n",cv[i],temps[i]);
+      		fprintf(f, "%lf,%lf,%lf\n",cv[i],temps[i],dcv[i]);
     		
     		
 		}
@@ -228,7 +240,7 @@ double *simulation(double density, double temp_simul, int steps, double potentia
         potentials[t][1] /=  normalization[t];  
         potentials[t][2] /=  normalization[t];     
     }
-    printf("Processore: %d, Acceptance ratio: %lf step fatti: %d\n",rank,acceptance*100/(double)steps,k);
+    printf("Processore: %d, densità %lf, Acceptance ratio: %lf step fatti: %d\n",rank,density,acceptance*100/(double)steps,k);
 
     return temp;
 }
