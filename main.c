@@ -21,12 +21,11 @@ int main(){
 
 	double *temps;
 
-	int total_steps = 100000;
+	int total_steps = 500000;
 
-	int steps,i;
+	int steps,i,j;
 
-	double potentials[num_temp][3];
-	double final_potentials[num_temp][3];
+	double potentials[num_temp][3] = {0};
 
 	double cv[num_temp];
 
@@ -35,15 +34,16 @@ int main(){
     int world_size;
     MPI_Comm_size(MPI_COMM_WORLD, &world_size);
 
+    double *final_potentials= (double*)malloc(sizeof(double)*num_temp*3*world_size);
+
     int rank;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    if(rank==0){
-    	generate_initial_configurations(world_size,density,temperature);
-    }
-    MPI_Barrier(MPI_COMM_WORLD);
+    //if(rank==0){
+    //	generate_initial_configurations(world_size,density,temperature);
+    //}
+    //MPI_Barrier(MPI_COMM_WORLD);
 
-    srand(rank);
 	steps = total_steps/world_size;
 	if(total_steps%world_size!=0){
 		int rest = total_steps%world_size;
@@ -54,23 +54,42 @@ int main(){
 
 	temps = simulation(density,temperature,steps,potentials,rank);
 
-	
-	double dpotentials[num_temp][2];
-	for(i=0;i<num_temp;i++){
-		dpotentials[i][0] = sqrt((1/steps)*(potentials[i][1]-potentials[i][0]*potentials[i][0]));
-		dpotentials[i][1] = sqrt((1/steps)*(potentials[i][2]-potentials[i][1]*potentials[i][1]));
-	}
+	//MPI_Allreduce(potentials,final_potentials,num_temp*3,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+	//printf("Processore %d: potenziale: %lf\n",rank,potentials[0][1]);
+	MPI_Gather(potentials,num_temp*3,MPI_DOUBLE,final_potentials,num_temp*3,MPI_DOUBLE,0,MPI_COMM_WORLD);
 
-	MPI_Allreduce(potentials,final_potentials,num_temp*3,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
 	if(rank==0){
+		double avrpotential[num_temp] = {0};
+		double dpotential[num_temp] = {0};
+		double avrpotential2[num_temp] = {0};
+		double dpotential2[num_temp] = {0};
+		for(j=0;j<num_temp;j++){
+			for(i=0;i<world_size;i++)
+			{
+				avrpotential[j] += final_potentials[num_temp*3*i+j*3];
+				avrpotential2[j] += final_potentials[num_temp*3*i+1+j*3];
+			}
+			avrpotential[j]/=world_size;
+			avrpotential2[j]/=world_size;
+			for(i=0;i<world_size;i++)
+			{
+				dpotential[j] += pow(final_potentials[num_temp*3*i+j*3] - avrpotential[j], 2);
+				dpotential2[j] += pow(final_potentials[num_temp*3*i+1+j*3] - avrpotential2[j], 2);
+			}
+			dpotential[j] = sqrt(dpotential[j]/world_size);
+			dpotential2[j] = sqrt(dpotential2[j]/world_size);
+
+		//printf("Temp %lf: %lf +/- %lf, %lf +/- %lf \n",temps[j],avrpotential[j],dpotential[j],avrpotential2[j],dpotential2[j]);
+		}
+	
+
+
+
 		char filename[80];
 		sprintf(filename,"%lf.csv",density);
     	FILE *f = fopen(filename, "w+");
 		for(i=0;i<num_temp;i++){
-			final_potentials[i][0] /= world_size; 
-			final_potentials[i][1] /= world_size; 
-			final_potentials[i][2] /= world_size; 
-			cv[i] = (final_potentials[i][1]-final_potentials[i][0]*final_potentials[i][0])/(temps[i]*temps[i]);
+			cv[i] = (avrpotential2[i]-avrpotential[i]*avrpotential[i])/(temps[i]*temps[i]);
 			//printf("Cv: %lf",cv[i]);
       		fprintf(f, "%lf,%lf\n",cv[i],temps[i]);
     		
@@ -109,12 +128,13 @@ double *simulation(double density, double temp_simul, int steps, double potentia
     char filename[80];
     sprintf(filename,"./%lf/%d.csv",density,rank);
     double positions[N][3];
-    readmatrix(positions,filename);
-    printf("Attendi, trovo il migliore delta.... Processore %d\n",rank);
+    //readmatrix(positions,filename);
+    initialize(L,positions);
+    //printf("Attendi, trovo il migliore delta.... Processore %d\n",rank);
    
     double delta = deltatable(density);//find_delta2(density);//find_delta(temp_simul,L,0.01/(pow(density,1.0/3.0)),positions);//find_delta(temp_simul,L,0.02/(pow(density,1.0/3.0)));//0.05/(pow(density,1.0/3.0));//find_delta(temp_simul,L,0.01);
   
-    printf("Processore %d Delta migliore trovato: %lf, adesso inizio la simulazione\n",rank,delta);
+   //printf("Processore %d Delta migliore trovato: %lf, adesso inizio la simulazione\n",rank,delta);
 
     int acceptance = 0;
 
@@ -132,16 +152,16 @@ double *simulation(double density, double temp_simul, int steps, double potentia
     double p;
     double xi;
     
-    srand((unsigned)rank);
+    srand((unsigned)rank+1);
 
-    for(t=0;t<num_temp;t++)
+    /*for(t=0;t<num_temp;t++)
     {
     	potentials[t][0] =  potential*exp((beta - betas[t])*Vt_simul);
         potentials[t][1] =  potential*potential*exp((beta - betas[t])*Vt_simul);
         potentials[t][2] =  pow(potential,4.0)*exp((beta - betas[t])*Vt_simul);
         normalization[t] = exp((beta - betas[t])*Vt_simul);
 
-    }
+    }*/
     //loop principale della catena
     for(k=0;k<steps;k++)
     {
@@ -164,15 +184,15 @@ double *simulation(double density, double temp_simul, int steps, double potentia
         }
         Vt_simul += potential;
         Vt2_simul+= potential*potential;
-    	for(t=0;t<num_temp;t++)
-    	{
-    		potentials[t][0] +=  potential*exp((beta - betas[t])*potential);
-       		potentials[t][1] +=  potential*potential*exp((beta - betas[t])*potential);
-        	potentials[t][2] +=  pow(potential,4.0)*exp((beta - betas[t])*potential);
-        	normalization[t] += exp((beta - betas[t])*potential);
+    	if(k>5000){
+    		for(t=0;t<num_temp;t++)
+    		{
+    			potentials[t][0] +=  potential*exp((beta - betas[t])*potential);
+       			potentials[t][1] +=  potential*potential*exp((beta - betas[t])*potential);
+        		potentials[t][2] +=  pow(potential,4.0)*exp((beta - betas[t])*potential);
+        		normalization[t] += exp((beta - betas[t])*potential);
+    		}
     	}
-    	
-    	//sleep(1);
     }
 
     

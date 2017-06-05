@@ -162,3 +162,19 @@ double find_delta(double temperature,double L, double delta,double initial_posit
         //delta*(acceptance_ratio/50)
     }
 }
+
+void initialize(double L,double positions[N][3]){
+    float i = 8;
+    int index = 0;
+    float j,k,m;
+    for(j =0;j<i;j++){
+      for(k =0;k<i;k++){
+        for(m =0;m<i;m++){
+          positions[index][0]= j*(L/i) - L/2.0;
+                positions[index][1] = k*(L/i) - L/2.0;
+                positions[index][2] = m*(L/i) - L/2.0;
+                index++;
+      }
+      }
+    }
+}

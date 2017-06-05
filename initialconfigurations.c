@@ -10,24 +10,6 @@
 #include "utility.h"
 
 
-void initialize(double L,double positions[N][3]){
-    float i = 5;
-    int index = 0;
-    float j,k,m;
-    for(j =0;j<i;j++){
-    	for(k =0;k<i;k++){
-    		for(m =0;m<i;m++){
-    			positions[index][0]= j*(L/i) - L/2.0;
-                positions[index][1] = k*(L/i) - L/2.0;
-                positions[index][2] = m*(L/i) - L/2.0;
-                index++;
-			}
-    	}
-    }
-}
-
-
-
 void tmpsimulation(int n, double density,double temp){
 
     char fi[80];
