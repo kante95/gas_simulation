@@ -51,7 +51,7 @@ int main(){
 
 void start_simulation(int rank, int world_size, double density){
 
-	double temperature = 1.5;
+	double temperature = 2*density+1.5;
 
 	double *temps;
 
